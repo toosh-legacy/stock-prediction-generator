@@ -14,6 +14,7 @@ export function CandlestickChart({ data, predictions, ticker }: Props) {
 
   useEffect(() => {
     if (!chartRef.current || !data.length) return
+    let disposed = false
 
     const chart = createChart(chartRef.current, {
       width: chartRef.current.clientWidth,
@@ -96,11 +97,12 @@ export function CandlestickChart({ data, predictions, ticker }: Props) {
     chart.timeScale().fitContent()
 
     const handleResize = () => {
-      if (chartRef.current) chart.applyOptions({ width: chartRef.current.clientWidth })
+      if (!disposed && chartRef.current) chart.applyOptions({ width: chartRef.current.clientWidth })
     }
     window.addEventListener('resize', handleResize)
 
     return () => {
+      disposed = true
       window.removeEventListener('resize', handleResize)
       chart.remove()
     }

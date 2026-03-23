@@ -77,6 +77,7 @@ export function LiveCandlestickChart({ ticker, interval = '5m', height = 420 }: 
   // ------------------------------------------------------------------
   useEffect(() => {
     if (!chartContainerRef.current) return
+    let disposed = false
 
     const chart = createChart(chartContainerRef.current, {
       width: chartContainerRef.current.clientWidth,
@@ -132,13 +133,14 @@ export function LiveCandlestickChart({ ticker, interval = '5m', height = 420 }: 
     volSeriesRef.current = volSeries
 
     const handleResize = () => {
-      if (chartContainerRef.current) {
+      if (!disposed && chartContainerRef.current) {
         chart.applyOptions({ width: chartContainerRef.current.clientWidth })
       }
     }
     window.addEventListener('resize', handleResize)
 
     return () => {
+      disposed = true
       window.removeEventListener('resize', handleResize)
       chart.remove()
       chartRef.current = null

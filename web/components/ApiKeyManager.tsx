@@ -14,6 +14,17 @@ export function ApiKeyManager() {
     if (stored) {
       setKey(stored)
       setSaved(true)
+    } else {
+      // Auto-provision a key on first visit so the app works immediately
+      setGenerating(true)
+      stocksageApi.createApiKey('StockSage Web')
+        .then((result) => {
+          setKey(result.api_key)
+          localStorage.setItem('stocksage_api_key', result.api_key)
+          setSaved(true)
+        })
+        .catch(() => setError('Could not reach API. Is it running on port 8000?'))
+        .finally(() => setGenerating(false))
     }
   }, [])
 
