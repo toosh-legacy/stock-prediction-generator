@@ -28,7 +28,12 @@ class Settings(BaseSettings):
     environment: str = "development"
     rate_limit_requests: int = 100
     rate_limit_window_seconds: int = 3600
-    allowed_origins: list[str] = ["http://localhost:3000"]
+    # Stored as comma-separated string; use allowed_origins_list property
+    allowed_origins: str = "http://localhost:3000"
+
+    @property
+    def allowed_origins_list(self) -> list[str]:
+        return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
     @property
     def using_upstash(self) -> bool:
@@ -44,6 +49,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 
 @lru_cache

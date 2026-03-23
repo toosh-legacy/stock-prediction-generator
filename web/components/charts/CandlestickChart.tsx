@@ -1,13 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
-import {
-  createChart,
-  ColorType,
-  CandlestickSeries,
-  HistogramSeries,
-  LineSeries,
-  LineStyle,
-} from 'lightweight-charts'
+import { createChart, ColorType, LineStyle } from 'lightweight-charts'
 import type { OHLCVPoint, PredictionPoint } from '@/types'
 
 interface Props {
@@ -38,7 +31,7 @@ export function CandlestickChart({ data, predictions, ticker }: Props) {
       rightPriceScale: { borderColor: '#374151' },
     })
 
-    const candleSeries = chart.addSeries(CandlestickSeries, {
+    const candleSeries = chart.addCandlestickSeries({
       upColor: '#22c55e',
       downColor: '#ef4444',
       borderUpColor: '#22c55e',
@@ -58,7 +51,7 @@ export function CandlestickChart({ data, predictions, ticker }: Props) {
     )
 
     // Volume histogram
-    const volumeSeries = chart.addSeries(HistogramSeries, {
+    const volumeSeries = chart.addHistogramSeries({
       color: '#6366f140',
       priceFormat: { type: 'volume' },
       priceScaleId: 'volume',
@@ -76,19 +69,19 @@ export function CandlestickChart({ data, predictions, ticker }: Props) {
 
     // Prediction overlay
     if (predictions?.length) {
-      const predLine = chart.addSeries(LineSeries, {
+      const predLine = chart.addLineSeries({
         color: '#818cf8',
         lineWidth: 2,
         lineStyle: LineStyle.Dashed,
         title: 'Forecast',
       })
-      const upperLine = chart.addSeries(LineSeries, {
+      const upperLine = chart.addLineSeries({
         color: '#818cf820',
         lineWidth: 1,
         lineStyle: LineStyle.Dotted,
         title: 'Upper CI',
       })
-      const lowerLine = chart.addSeries(LineSeries, {
+      const lowerLine = chart.addLineSeries({
         color: '#818cf820',
         lineWidth: 1,
         lineStyle: LineStyle.Dotted,

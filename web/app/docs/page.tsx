@@ -56,7 +56,7 @@ r = requests.post(
 )
 result = r.json()
 for p in result["predictions"]:
-    print(f"{p['date']}: ${p['predicted']:.2f} [{p['lower_ci']:.2f}, {p['upper_ci']:.2f}]")`,
+    print(f"{p['date']}: \${p['predicted']:.2f} [{p['lower_ci']:.2f}, {p['upper_ci']:.2f}]")`,
     'Backtest': `import requests
 
 headers = {"X-API-Key": "sk-your_key"}

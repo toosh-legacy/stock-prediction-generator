@@ -21,16 +21,29 @@ def _get_redis_client():
 
 class DataFetcher:
     def __init__(self):
-        self.redis = _get_redis_client()
+        self._redis = None
         self.cache_ttl = 3600  # 1 hour
 
+    @property
+    def redis(self):
+        if self._redis is None:
+            try:
+                self._redis = _get_redis_client()
+            except Exception:
+                self._redis = None
+        return self._redis
+
     def _cache_get(self, key: str):
+        if self.redis is None:
+            return None
         try:
             return self.redis.get(key)
         except Exception:
             return None
 
     def _cache_set(self, key: str, value: str, ttl: int):
+        if self.redis is None:
+            return
         try:
             self.redis.setex(key, ttl, value)
         except Exception:

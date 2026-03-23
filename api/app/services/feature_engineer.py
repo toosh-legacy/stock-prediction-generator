@@ -200,14 +200,22 @@ class FeatureEngineer:
     def prepare_sequences(
         self, df: pd.DataFrame, seq_len: int = 60, horizon: int = 1
     ) -> tuple:
+        """
+        Returns (X, y, scaler, feature_cols) for LSTM training.
+        X: scaled feature sequences of shape (N, seq_len, n_features).
+        y: log return over `horizon` days — scale-invariant target.
+        At inference, convert back: price = current_price * exp(predicted_log_return).
+        """
         feature_cols = [c for c in df.columns if c not in ["open", "high", "low", "close", "volume"]]
         df_clean = df[feature_cols + ["close"]].dropna()
         scaler = RobustScaler()
         scaled = scaler.fit_transform(df_clean)
+        close_vals = df_clean["close"].values
         X, y = [], []
         for i in range(seq_len, len(scaled) - horizon):
             X.append(scaled[i - seq_len:i])
-            y.append(scaled[i + horizon - 1, -1])
+            # Log return: log(close[i+horizon] / close[i])
+            y.append(np.log(close_vals[i + horizon] / close_vals[i]))
         return np.array(X), np.array(y), scaler, df_clean.columns.tolist()
 
     # ------------------------------------------------------------------
@@ -215,9 +223,16 @@ class FeatureEngineer:
     # ------------------------------------------------------------------
 
     def prepare_tabular(self, df: pd.DataFrame, horizon: int = 1) -> tuple:
+        """
+        Returns (X, y, feature_cols) where y is the log return over `horizon` days.
+        Predicting log returns (not absolute price) makes the model scale-invariant.
+        At inference, convert back: price = current_price * exp(predicted_log_return).
+        """
         feature_cols = [c for c in df.columns if c not in ["open", "high", "low", "close", "volume"]]
         df_clean = df[feature_cols + ["close"]].dropna()
-        X = df_clean[feature_cols].values
-        y = df_clean["close"].shift(-horizon).dropna().values
-        X = X[: len(y)]
+        future_close = df_clean["close"].shift(-horizon)
+        log_return = np.log(future_close / df_clean["close"])
+        valid = log_return.dropna()
+        X = df_clean[feature_cols].loc[valid.index].values
+        y = valid.values
         return X, y, feature_cols

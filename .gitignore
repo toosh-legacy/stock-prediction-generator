@@ -26,6 +26,7 @@ mlflow.db
 
 # Test artifacts
 test.db
+*.db
 .pytest_cache/
 .coverage
 htmlcov/

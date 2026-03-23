@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(pip --version)",
+      "Bash(docker compose:*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(pip list:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(cmd /c \"taskkill /F /PID 26140\")",
+      "Bash(netstat -ano)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

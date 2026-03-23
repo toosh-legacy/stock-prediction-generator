@@ -4,10 +4,16 @@ from typing import Literal
 from app.middleware.auth import verify_api_key
 from app.models.api_key import APIKey
 from app.services.data_fetcher import DataFetcher
+from app.services.feature_engineer import FeatureEngineer
+from app.services.macro_fetcher import MacroFetcher
+from app.services.sentiment_service import SentimentService
 from app.services.model_registry import load_or_train_model
+from app.config import get_settings
 
 router = APIRouter()
 fetcher = DataFetcher()
+fe = FeatureEngineer()
+settings = get_settings()
 
 
 class PredictionRequest(BaseModel):
@@ -31,32 +37,48 @@ class PredictionResponse(BaseModel):
     "/",
     response_model=PredictionResponse,
     summary="Predict stock prices",
-    description="""
-Predict future closing prices for a given ticker.
-
-Returns a list of `{date, predicted, lower_ci, upper_ci}` objects for the requested horizon.
-
-**Note:** Models are pre-trained on 2 years of daily data. The first request for a
-ticker may train a model on-the-fly (~30s). Subsequent requests use cached models.
-    """,
 )
 async def predict_stock(
     body: PredictionRequest,
     api_key: APIKey = Depends(verify_api_key),
 ):
+    ticker = body.ticker.upper()
+
     try:
-        df = await fetcher.get_ohlcv(body.ticker.upper(), period="2y")
+        df = await fetcher.get_ohlcv(ticker, period="2y")
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
     try:
-        m = load_or_train_model(body.ticker.upper(), body.model, body.horizon, df)
-        result = m.predict(df, horizon=body.horizon)
+        # Build full feature set with live macro + sentiment (same as training)
+        start = df.index[0].strftime("%Y-%m-%d")
+        end = df.index[-1].strftime("%Y-%m-%d")
+
+        macro_df = None
+        try:
+            macro_fetcher = MacroFetcher(fred_api_key=settings.fred_api_key)
+            macro_df = macro_fetcher.get_macro_features(start, end)
+        except Exception:
+            pass
+
+        sentiment_features = {}
+        try:
+            svc = SentimentService(news_api_key=settings.news_api_key)
+            sentiment_result = await svc.get_sentiment(ticker)
+            from app.services.sentiment_service import sentiment_to_features
+            sentiment_features = sentiment_to_features(sentiment_result)
+        except Exception:
+            pass
+
+        df_feat = fe.build_features(df, macro_df=macro_df, sentiment_features=sentiment_features)
+
+        m = load_or_train_model(ticker, body.model, body.horizon, df_feat)
+        result = m.predict(df_feat, horizon=body.horizon)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Model error: {str(e)}")
 
     return PredictionResponse(
-        ticker=body.ticker.upper(),
+        ticker=ticker,
         model=body.model,
         horizon=body.horizon,
         predictions=[

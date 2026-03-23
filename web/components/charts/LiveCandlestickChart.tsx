@@ -3,8 +3,6 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import {
   createChart,
   ColorType,
-  CandlestickSeries,
-  HistogramSeries,
   IChartApi,
   ISeriesApi,
 } from 'lightweight-charts'
@@ -103,7 +101,7 @@ export function LiveCandlestickChart({ ticker, interval = '5m', height = 420 }: 
     chartRef.current = chart
 
     // Real candles series
-    const realSeries = chart.addSeries(CandlestickSeries, {
+    const realSeries = chart.addCandlestickSeries({
       upColor: '#22c55e',
       downColor: '#ef4444',
       borderUpColor: '#22c55e',
@@ -114,7 +112,7 @@ export function LiveCandlestickChart({ ticker, interval = '5m', height = 420 }: 
     realSeriesRef.current = realSeries
 
     // Predicted candles — indigo, hollow look
-    const predSeries = chart.addSeries(CandlestickSeries, {
+    const predSeries = chart.addCandlestickSeries({
       upColor: '#818cf840',
       downColor: '#a78bfa40',
       borderUpColor: '#818cf8',
@@ -125,7 +123,7 @@ export function LiveCandlestickChart({ ticker, interval = '5m', height = 420 }: 
     predSeriesRef.current = predSeries
 
     // Volume
-    const volSeries = chart.addSeries(HistogramSeries, {
+    const volSeries = chart.addHistogramSeries({
       color: '#6366f140',
       priceFormat: { type: 'volume' },
       priceScaleId: 'vol',

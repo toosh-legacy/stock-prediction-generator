@@ -233,7 +233,7 @@ def train_ticker(
         os.makedirs(artifacts_dir, exist_ok=True)
         path = os.path.join(artifacts_dir, f"{ticker}_{model_name}_h{horizon}")
         final_model.save(path)
-        print(f"  Saved → {path}")
+        print(f"  Saved -> {path}")
 
         # Push to HF Hub
         if push_hf and settings.using_hf:
